@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+body {
+  font-family: 'Share Tech Mono', monospace;
+  color: #39ff14;
+  background-color: #030a03;
+  padding: 0;
+  margin: 0;
+}
+
+.terminal-container {
+  max-width: 850px;
+  margin: 40px auto;
+  border: 1px solid #1f8b0c;
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+  background-color: #050d05;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+.terminal-header {
+  border-bottom: 2px double #1f8b0c;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.terminal-title {
+  font-size: 1.4rem;
+  letter-spacing: 2px;
+  animation: blink 1.2s infinite;
+}
+
+.dashboard-stats {
+  background: rgba(10, 30, 10, 0.8);
+  border: 1px dashed #1f8b0c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #1f8b0c;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.terminal-button {
+  background: transparent;
+  color: #39ff14;
+  border: 1px solid #39ff14;
+  font-family: 'Share Tech Mono', monospace;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  text-transform: uppercase;
+}
+
+.terminal-button:hover {
+  background-color: #39ff14;
+  color: #030a03;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.5);
+}
+
+.terminal-button:disabled {
+  color: #1a4d13;
+  border-color: #1a4d13;
+  cursor: not-allowed;
+}
+
+.choices-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+
+/* Color codes by risk */
+.btn-risk-low { border-color: #2bef2b; color: #2bef2b; }
+.btn-risk-medium { border-color: #dfef2e; color: #dfef2e; }
+.btn-risk-high { border-color: #ef452e; color: #ef452e; }
+.btn-risk-temporal { border-color: #2eb4ef; color: #2eb4ef; }
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
