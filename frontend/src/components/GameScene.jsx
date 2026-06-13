@@ -1,35 +1,62 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ChoiceButton from './ChoiceButton';
+
+const TTS_API = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/tts`;
+const USE_BACKEND_TTS = import.meta.env.VITE_USE_BACKEND_TTS === 'true';
 
 function GameScene({ scene, onChoiceSelect }) {
   const [narrationEnabled, setNarrationEnabled] = useState(false);
-  const [synth, setSynth] = useState(null);
+  const [narrating, setNarrating] = useState(false);
+  const audioRef = useRef(null);
+  const synthRef = useRef(typeof window !== 'undefined' ? window.speechSynthesis : null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      setSynth(window.speechSynthesis);
+  const stopAll = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
     }
-  }, []);
+    if (synthRef.current) synthRef.current.cancel();
+    setNarrating(false);
+  };
 
   useEffect(() => {
-    if (narrationEnabled && synth && scene?.narrative) {
-      synth.cancel(); // Stop active voices
+    if (!narrationEnabled || !scene?.narrative) { stopAll(); return; }
+
+    if (USE_BACKEND_TTS) {
+      // High-quality backend TTS (OpenAI onyx via OpenRouter)
+      setNarrating(true);
+      fetch(TTS_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: scene.narrative })
+      })
+        .then(r => r.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          if (!audioRef.current) audioRef.current = new Audio();
+          audioRef.current.src = url;
+          audioRef.current.onended = () => { setNarrating(false); URL.revokeObjectURL(url); };
+          audioRef.current.play();
+        })
+        .catch(() => setNarrating(false));
+    } else {
+      // Browser Web Speech API fallback (Apple Neural voices on iOS — sounds good)
+      const synth = synthRef.current;
+      if (!synth) return;
+      synth.cancel();
       const utterance = new SpeechSynthesisUtterance(scene.narrative);
       utterance.rate = 0.9;
-      utterance.pitch = 0.85; // Machine aesthetic tone
-
+      utterance.pitch = 0.85;
       const voices = synth.getVoices();
-      // Attempt to pick a clean narrative baritone voice
-      const preferredVoice = voices.find(v => v.name.includes('Daniel') || v.name.includes('Google US English'));
-      if (preferredVoice) utterance.voice = preferredVoice;
-
+      const preferred = voices.find(v => v.name.includes('Daniel') || v.name.includes('Google US English'));
+      if (preferred) utterance.voice = preferred;
+      utterance.onend = () => setNarrating(false);
+      setNarrating(true);
       synth.speak(utterance);
     }
 
-    return () => {
-      if (synth) synth.cancel();
-    };
-  }, [scene?.narrative, narrationEnabled, synth]);
+    return stopAll;
+  }, [scene?.narrative, narrationEnabled]);
 
   if (!scene) return null;
 
@@ -40,9 +67,9 @@ function GameScene({ scene, onChoiceSelect }) {
         <button
           className="terminal-button"
           style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-          onClick={() => setNarrationEnabled(!narrationEnabled)}
+          onClick={() => setNarrationEnabled(v => !v)}
         >
-          {narrationEnabled ? '🔊 AUDIO FEED ACTIVE' : '🔇 AUDIO SILENT'}
+          {narrationEnabled ? (narrating ? '🔊 TRANSMITTING...' : '🔊 AUDIO ON') : '🔇 AUDIO OFF'}
         </button>
       </div>
 
@@ -55,7 +82,7 @@ function GameScene({ scene, onChoiceSelect }) {
           <ChoiceButton
             key={choice.id}
             choice={choice}
-            onSelect={() => onChoiceSelect(choice.id)}
+            onSelect={() => { stopAll(); onChoiceSelect(choice.id); }}
           />
         ))}
       </div>
