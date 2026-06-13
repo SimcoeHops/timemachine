@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:3001/api/game';
+const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/game`;
 
 export const startNewGame = async () => {
   const res = await axios.post(`${API_BASE}/start`);
